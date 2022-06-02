@@ -1,0 +1,199 @@
+name: 'Build and push steampipe plugin'
+description: 'Build and push steampipe plugin to GitHub packages'
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set environment variables
+      run: |
+        plugin_name=$(echo $GITHUB_REPOSITORY | cut -d'-' -f 3)
+        echo $plugin_name
+        echo "PLUGIN_NAME=${plugin_name}" >> $GITHUB_ENV
+        echo "PLUGIN_REPO=ghcr.io" >> $GITHUB_ENV
+        echo "CONFIG_SCHEMA_VERSION"=2020-11-18" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Exit if goreleaser file is missing
+      run: |
+        test -f .goreleaser.yml
+      shell: bash
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.18
+
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        version: latest
+        args: release --rm-dist --skip-publish
+
+    - name: List Build Artifacts
+      run: ls -laR ./dist
+      shell: bash
+
+    - name: Save Linux Build Artifact - AMD64
+      uses: actions/upload-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_linux_amd64
+        path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_linux_amd64.gz
+        if-no-files-found: error
+
+    - name: Save Linux Build Artifact - ARM64
+      uses: actions/upload-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_linux_arm64
+        path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_linux_arm64.gz
+        if-no-files-found: error
+
+    - name: Save MacOS Build Artifact - AMD64
+      uses: actions/upload-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_darwin_amd64
+        path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_darwin_amd64.gz
+        if-no-files-found: error
+
+    - name: Save MacOS Build Artifact - ARM64
+      uses: actions/upload-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_darwin_arm64
+        path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_darwin_arm64.gz
+        if-no-files-found: error
+
+    - run: oras version # oras is pre-installed on the image...
+
+    - name: Download linux-amd64 artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_linux_amd64
+
+    - name: Download linux_arm64 artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_linux_arm64
+
+    - name: Download darwin_amd64 artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_darwin_amd64
+
+    - name: Download darwin_arm64 artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: steampipe-${{ env.PLUGIN_NAME }}_darwin_arm64
+
+    - name: List files
+      run: ls -l
+
+    - name: Get latest version tag
+      run: |-
+        echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - name: Trim tag
+      run: |-
+        echo $VERSION
+        trim=${VERSION#"v"}
+        echo $trim
+        echo "VERSION=${trim}" >> $GITHUB_ENV
+
+    - name: Validate Version String
+      run: |-
+        if [[ $VERSION =~  ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Version OK: $VERSION"
+        else
+          echo "Invalid version: $VERSION"
+          exit 1
+        fi
+
+    - name: Ensure Version Does Not Exist
+      run: |-
+        URL=https://$PLUGIN_REPO/v2/$GITHUB_REPOSITORY_OWNER/$PLUGIN_NAME/tags/list
+        IDX=$(curl -L -H "Authorization: Bearer $(base64 <<< $GITHUB_TOKEN)" $URL | jq ".tags | index(\"$VERSION\")")
+        if [ $IDX == "null" ]; then
+          echo "OK - Version does not exist: $VERSION"
+        else
+          echo "Version already exists: $VERSION"
+          exit 1
+        fi
+
+    # create the config file
+    - run: |-
+        JSON_STRING=$( jq -n \
+                  --arg name "$PLUGIN_NAME" \
+                  --arg organization "$GITHUB_REPOSITORY_OWNER" \
+                  --arg version "$VERSION" \
+                  --arg schemaVersion "$CONFIG_SCHEMA_VERSION" \
+                  '{schemaVersion: $schemaVersion, plugin: { name: $name, organization: $organization, version: $version} }' )
+
+        echo $JSON_STRING > config.json
+
+    - run: cat config.json
+
+    # create the annotations file
+    - run: |-
+        JSON_STRING=$( jq -n \
+                  --arg title "$PLUGIN_NAME" \
+                  --arg desc "$GITHUB_REPOSITORY_OWNER" \
+                  --arg version "$VERSION" \
+                  --arg timestamp "$(date +%FT%T%z)" \
+                  --arg repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+                  --arg commit "$GITHUB_SHA" \
+                  --arg vendor "$GITHUB_REPOSITORY_OWNER" \
+                '{
+                  "$manifest": {
+                      "org.opencontainers.image.title": $title,
+                      "org.opencontainers.image.description": $desc,
+                      "org.opencontainers.image.version": $version,
+                      "org.opencontainers.image.created": $timestamp,
+                      "org.opencontainers.image.source": $repo,
+                      "org.opencontainers.image.revision": $commit,
+                      "org.opencontainers.image.vendor": $vendor
+                  }
+                }' )
+
+          echo $JSON_STRING > annotations.json
+
+    - run: cat annotations.json
+
+    - run: cat README.md
+
+    # Login to registry
+    - name: Log in to the Container registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.PLUGIN_REPO }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.PLUGIN_REPO }}/${{ env.ORG }}/${{ env.PLUGIN_NAME }}
+        tags: |
+          type=ref,event=tag
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+
+    # push to the registry
+    - run: |-
+        readarray -t tags <<< "${{ steps.meta.outputs.tags }}"
+
+        for tag in "${tags[@]}";
+        do
+          oras push $tag \
+            --manifest-config config.json:application/vnd.turbot.steampipe.config.v1+json \
+            --manifest-annotations annotations.json \
+            steampipe-plugin-${PLUGIN_NAME}_darwin_amd64.gz:application/vnd.turbot.steampipe.plugin.darwin-amd64.layer.v1+gzip \
+            steampipe-plugin-${PLUGIN_NAME}_darwin_arm64.gz:application/vnd.turbot.steampipe.plugin.darwin-arm64.layer.v1+gzip \
+            steampipe-plugin-${PLUGIN_NAME}_linux_amd64.gz:application/vnd.turbot.steampipe.plugin.linux-amd64.layer.v1+gzip \
+            steampipe-plugin-${PLUGIN_NAME}_linux_arm64.gz:application/vnd.turbot.steampipe.plugin.linux-arm64.layer.v1+gzip \
+            docs:application/vnd.turbot.steampipe.plugin.docs.layer.v1+tar \
+            config:application/vnd.turbot.steampipe.plugin.spc.layer.v1+tar
+        done
