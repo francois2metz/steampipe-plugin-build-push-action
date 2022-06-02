@@ -14,7 +14,7 @@ runs:
         echo $plugin_name
         echo "PLUGIN_NAME=${plugin_name}" >> $GITHUB_ENV
         echo "PLUGIN_REPO=ghcr.io" >> $GITHUB_ENV
-        echo "CONFIG_SCHEMA_VERSION"=2020-11-18" >> $GITHUB_ENV
+        echo "CONFIG_SCHEMA_VERSION=2020-11-18" >> $GITHUB_ENV
       shell: bash
 
     - name: Exit if goreleaser file is missing
