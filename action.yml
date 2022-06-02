@@ -179,7 +179,7 @@ runs:
       with:
         registry: ${{ env.PLUGIN_REPO }}
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ env.GITHUB_TOKEN }}
 
     - name: Docker meta
       id: meta
