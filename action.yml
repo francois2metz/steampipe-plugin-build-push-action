@@ -185,7 +185,7 @@ runs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ${{ env.PLUGIN_REPO }}/${{ env.GITHUB_REPOSITORY_OWNER }}/${{ env.PLUGIN_NAME }}
+        images: ${{ env.PLUGIN_REPO }}/${{ github.repository_owner }}/${{ env.PLUGIN_NAME }}
         tags: |
           type=ref,event=tag
           type=semver,pattern={{version}}
