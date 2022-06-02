@@ -2,6 +2,17 @@
 
 GitHub action to build your [Steampipe][] plugin and push it to GitHub packages.
 
+Your repository should be named `steampipe-plugin-thename`. Once the package has been pushed, you can install with steampipe with: `steampipe plugin install ghcr.io/youruser/thename`.
+The config file should reference `plugin = "ghcr.io/youruser/thename"` to work:
+
+```hcl
+connection "thename" {
+    plugin = "ghcr.io/youruser/thename"
+
+    ....
+}
+```
+
 ## Usage
 
 ```yaml
