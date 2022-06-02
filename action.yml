@@ -66,6 +66,7 @@ runs:
         if-no-files-found: error
 
     - run: oras version # oras is pre-installed on the image...
+      shell: bash
 
     - name: Download linux-amd64 artifact
       uses: actions/download-artifact@v2
@@ -89,10 +90,12 @@ runs:
 
     - name: List files
       run: ls -l
+      shell: bash
 
     - name: Get latest version tag
       run: |-
         echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Trim tag
       run: |-
@@ -100,6 +103,7 @@ runs:
         trim=${VERSION#"v"}
         echo $trim
         echo "VERSION=${trim}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Validate Version String
       run: |-
@@ -109,6 +113,7 @@ runs:
           echo "Invalid version: $VERSION"
           exit 1
         fi
+      shell: bash
 
     - name: Ensure Version Does Not Exist
       run: |-
@@ -120,6 +125,7 @@ runs:
           echo "Version already exists: $VERSION"
           exit 1
         fi
+      shell: bash
 
     # create the config file
     - run: |-
@@ -131,8 +137,10 @@ runs:
                   '{schemaVersion: $schemaVersion, plugin: { name: $name, organization: $organization, version: $version} }' )
 
         echo $JSON_STRING > config.json
+      shell: bash
 
     - run: cat config.json
+      shell: bash
 
     # create the annotations file
     - run: |-
@@ -157,10 +165,13 @@ runs:
                 }' )
 
           echo $JSON_STRING > annotations.json
+      shell: bash
 
     - run: cat annotations.json
+      shell: bash
 
     - run: cat README.md
+      shell: bash
 
     # Login to registry
     - name: Log in to the Container registry
@@ -197,3 +208,4 @@ runs:
             docs:application/vnd.turbot.steampipe.plugin.docs.layer.v1+tar \
             config:application/vnd.turbot.steampipe.plugin.spc.layer.v1+tar
         done
+      shell: bash
