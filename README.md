@@ -22,4 +22,8 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 ```
 
+## License
+
+MIT
+
 [Steampipe]: https://github.com/turbot/steampipe
