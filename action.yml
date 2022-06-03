@@ -1,5 +1,8 @@
 name: 'Build and push steampipe plugin'
 description: 'Build and push steampipe plugin to GitHub packages'
+branding:
+  icon: 'package'
+  color: 'red'
 runs:
   using: "composite"
   steps:
