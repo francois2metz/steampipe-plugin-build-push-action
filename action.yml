@@ -151,7 +151,7 @@ runs:
                   --arg title "$PLUGIN_NAME" \
                   --arg desc "$GITHUB_REPOSITORY_OWNER" \
                   --arg version "$VERSION" \
-                  --arg timestamp "$(date +%FT%T%z)" \
+                  --arg timestamp "$(date +%FT%TZ)" \
                   --arg repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
                   --arg commit "$GITHUB_SHA" \
                   --arg vendor "$GITHUB_REPOSITORY_OWNER" \
