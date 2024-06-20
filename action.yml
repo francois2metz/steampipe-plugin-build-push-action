@@ -182,7 +182,7 @@ runs:
 
     # Login to registry
     - name: Log in to the Container registry
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         registry: ${{ env.PLUGIN_REPO }}
         username: ${{ github.actor }}
@@ -190,7 +190,7 @@ runs:
 
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v4
+      uses: docker/metadata-action@v5
       with:
         images: ${{ env.PLUGIN_REPO }}/${{ github.repository_owner }}/${{ env.PLUGIN_NAME }}
         tags: |
