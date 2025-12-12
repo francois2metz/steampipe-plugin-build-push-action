@@ -42,28 +42,28 @@ runs:
       shell: bash
 
     - name: Save Linux Build Artifact - AMD64
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_linux_amd64
         path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_linux_amd64.gz
         if-no-files-found: error
 
     - name: Save Linux Build Artifact - ARM64
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_linux_arm64
         path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_linux_arm64.gz
         if-no-files-found: error
 
     - name: Save MacOS Build Artifact - AMD64
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_darwin_amd64
         path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_darwin_amd64.gz
         if-no-files-found: error
 
     - name: Save MacOS Build Artifact - ARM64
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_darwin_arm64
         path: ./dist/steampipe-plugin-${{ env.PLUGIN_NAME }}_darwin_arm64.gz
@@ -76,22 +76,22 @@ runs:
       shell: bash
 
     - name: Download linux-amd64 artifact
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v7
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_linux_amd64
 
     - name: Download linux_arm64 artifact
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v7
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_linux_arm64
 
     - name: Download darwin_amd64 artifact
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v7
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_darwin_amd64
 
     - name: Download darwin_arm64 artifact
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v7
       with:
         name: steampipe-${{ env.PLUGIN_NAME }}_darwin_arm64
 
