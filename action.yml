@@ -190,7 +190,7 @@ runs:
 
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v5
+      uses: docker/metadata-action@v6
       with:
         images: ${{ env.PLUGIN_REPO }}/${{ github.repository_owner }}/${{ env.PLUGIN_NAME }}
         tags: |
