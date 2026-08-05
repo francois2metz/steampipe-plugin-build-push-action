@@ -125,7 +125,7 @@ runs:
     - name: Ensure Version Does Not Exist
       run: |-
         URL=https://$PLUGIN_REPO/v2/$GITHUB_REPOSITORY_OWNER/$PLUGIN_NAME/tags/list
-        IDX=$(curl -L -H "Authorization: Bearer $(base64 <<< $GITHUB_TOKEN)" $URL | jq ".tags | index(\"$VERSION\")")
+        IDX=$(curl -L -H "Authorization: Bearer $(base64 -w0 <<< $GITHUB_TOKEN)" $URL | jq ".tags | index(\"$VERSION\")")
         if [ $IDX == "null" ]; then
           echo "OK - Version does not exist: $VERSION"
         else
